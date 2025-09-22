@@ -3,6 +3,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
+#include <ctime>
 #include <queue>
 #include <iostream>
 #include "bvh.h"
@@ -14,6 +15,7 @@ class CollisionDetect{
     CollisionDetect(){};
     ~CollisionDetect(){};
     std::vector<std::pair<int, int>> findCollisions(Eigen::MatrixXd *V, Eigen::MatrixXi *F);
+    bool hasCollisions(Eigen::MatrixXd *V, Eigen::MatrixXi *F);  // 新增这行
 
   private:
     std::vector<Eigen::MatrixXd>* getAllTrianglePoints(Eigen::MatrixXd *V, Eigen::MatrixXi *F);

@@ -1,10 +1,11 @@
-#include <igl/viewer/Viewer.h>
+// #include <igl/viewer/Viewer.h>
 #include "collision_detect.h"
 #include "mesh.h"
 #include <string>
 #include <iostream>
 #include <igl/readPLY.h>
 #include "bvh.h"
+#include <igl/readOFF.h>  // 添加这行
 
 bool VISUALIZATION = true;
 
@@ -14,7 +15,7 @@ TriangleMesh getTriangleMesh(std::string file) {
   Eigen::MatrixXi F;
 
   std::string fileExt = file.substr(file.find_last_of(".") + 1);
-  std::string meshFilepath = "../meshes/" + file;
+  std::string meshFilepath = file;
   if (fileExt == "off") {
     igl::readOFF(meshFilepath,V,F);
   } else if (fileExt == "ply") {
@@ -34,40 +35,40 @@ TriangleMesh getTriangleMesh(std::string file) {
   return m;
 }
 
-void plot_mesh(TriangleMesh mesh) {
-  igl::viewer::Viewer viewer;
-  viewer.data.set_mesh(mesh.V, mesh.F);
-  viewer.data.set_face_based(true);
-  viewer.launch();
-}
+// void plot_mesh(TriangleMesh mesh) {
+//   igl::viewer::Viewer viewer;
+//   viewer.data.set_mesh(mesh.V, mesh.F);
+//   viewer.data.set_face_based(true);
+//   viewer.launch();
+// }
 
-void visualizeCollisions(TriangleMesh *mesh, std::vector<std::pair<int,int>> collisions) {
+// void visualizeCollisions(TriangleMesh *mesh, std::vector<std::pair<int,int>> collisions) {
     
-  for (int i =0; i < collisions.size(); i++) {
-    std::cout << "------" << std::endl;
-    std::cout << "Collision " << i << "/" << collisions.size() << std::endl;
-    int tri1 = collisions.at(i).first;
-    int tri2 = collisions.at(i).second;
-    std::cout << "TRI INDS: " << tri1 << " " << tri2 << std::endl;
+//   for (int i =0; i < collisions.size(); i++) {
+//     std::cout << "------" << std::endl;
+//     std::cout << "Collision " << i << "/" << collisions.size() << std::endl;
+//     int tri1 = collisions.at(i).first;
+//     int tri2 = collisions.at(i).second;
+//     std::cout << "TRI INDS: " << tri1 << " " << tri2 << std::endl;
 
-    Eigen::MatrixXd points1 = 
-      BVHNode::triangleToPoints(&(mesh->V), mesh->F.row(tri1));
+//     Eigen::MatrixXd points1 = 
+//       BVHNode::triangleToPoints(&(mesh->V), mesh->F.row(tri1));
 
-    Eigen::MatrixXd points2 = 
-      BVHNode::triangleToPoints(&(mesh->V), mesh->F.row(tri2));
+//     Eigen::MatrixXd points2 = 
+//       BVHNode::triangleToPoints(&(mesh->V), mesh->F.row(tri2));
 
-    Eigen::MatrixXd intersectV(6, 3);
-    intersectV << points1, points2;
-    Eigen::MatrixXi intersectF = (Eigen::MatrixXi(2,3) <<
-      0, 1, 2,
-      3, 4, 5
-    ).finished();
-    TriangleMesh m;
-    m.V = intersectV;
-    m.F = intersectF;
-    plot_mesh(m);
-  }
-}
+//     Eigen::MatrixXd intersectV(6, 3);
+//     intersectV << points1, points2;
+//     Eigen::MatrixXi intersectF = (Eigen::MatrixXi(2,3) <<
+//       0, 1, 2,
+//       3, 4, 5
+//     ).finished();
+//     TriangleMesh m;
+//     m.V = intersectV;
+//     m.F = intersectF;
+//     plot_mesh(m);
+//   }
+// }
 
 
 int main(int argc, char *argv[])
@@ -83,13 +84,17 @@ int main(int argc, char *argv[])
 
   // Collision detector
   CollisionDetect *cd = new CollisionDetect();
-  std::vector<std::pair<int, int>> collisions = 
-    cd->findCollisions(&(mesh.V), &(mesh.F));
-  std::cout << "COLLISIONS: " << collisions.size() << std::endl;
-  
+//   std::vector<std::pair<int, int>> collisions = 
+//     cd->findCollisions(&(mesh.V), &(mesh.F));
+//   std::cout << "COLLISIONS: " << collisions.size() << std::endl;
+
+  bool hasCollision = cd->hasCollisions(&(mesh.V), &(mesh.F));
+  std::cout << "HAS COLLISION: " << (hasCollision ? "YES" : "NO") << std::endl;
+
+
   // Plot the mesh and show collisions
-  if (VISUALIZATION) {
-    plot_mesh(mesh);
-    visualizeCollisions(&mesh, collisions);
-  }
+//   if (VISUALIZATION) {
+//     plot_mesh(mesh);
+//     visualizeCollisions(&mesh, collisions);
+//   }
 }

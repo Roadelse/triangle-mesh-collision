@@ -2,6 +2,15 @@
 
 Self collision detection for triangles meshes. Implementation in C++, uses Eigen and [libigl](http://libigl.github.io/libigl/) libraries.
 
+
+UPDATE:
+
++ Use `-DCMAKE_TOOLCHAIN_FILE=[vcpkg root]/scripts/buildsystems/vcpkg.cmak` to cmake
++ Change algorithm from counting collisions to having any collision or not
++ Provide an alternative python version, slower but more flexible
+
+
+
 **To use:**  
   1. Create build directory (`mkdir build`)  
   2. `cd build/`  

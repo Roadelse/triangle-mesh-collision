@@ -3,6 +3,80 @@
 bool TIMING = false;
 bool INSPECT_TREE = false;
 
+
+bool CollisionDetect::hasCollisions(Eigen::MatrixXd *V, Eigen::MatrixXi *F) {
+    double begin = 0; // for timer
+    
+    // Get all triangles points from V/F
+    std::vector<Eigen::MatrixXd> *allTriPoints = getAllTrianglePoints(V, F);
+    
+    // Construct the BVH data structure
+    if (TIMING) begin = std::clock();
+    BVHNode *root = loadMeshToBVH(V, F, allTriPoints);
+    if (INSPECT_TREE) root->inspectTree(); 
+    if(TIMING) std::cout << "Tree construction: " << (std::clock() - begin) / CLOCKS_PER_SEC << " sec" << std::endl;
+    
+    // Find collision - return immediately when found
+    if(TIMING) begin = std::clock();
+    
+    std::queue<BVHNode*> intersectQueue;
+    int rows = F->rows();
+    
+    for (int i = 0; i < rows; i++) {
+        // Get bounding box for current triangle
+        BoundingBox currTriBox(&(allTriPoints->at(i)));
+        
+        // Find collision candidates by crawling tree
+        intersectQueue.push(root);
+        while (!intersectQueue.empty()) {
+            // Get first element
+            BVHNode *curr = intersectQueue.front();
+            intersectQueue.pop();
+            
+            // Check if leaf. Test for collision immediately
+            if (curr->isLeaf()) {
+                int otherTriInd = (curr->triangle)(3);
+                
+                // Check if ind of other triangle's index > mine. Prevents duplicate checks
+                if (otherTriInd > i) {
+                    // Make sure triangles aren't neighbors (share vert)
+                    if (!triNeighbors(i, otherTriInd, allTriPoints)) {
+                        // 立即检测碰撞，不存储candidate
+                        if (trianglesIntersect(&(allTriPoints->at(i)), &(allTriPoints->at(otherTriInd)))) {
+                            if(TIMING) std::cout << "Collision found in: " << (std::clock() - begin) / CLOCKS_PER_SEC << " sec" << std::endl;
+                            
+                            // 清理内存
+                            delete allTriPoints;
+                            // delete root; // 如果BVHNode有析构函数的话
+                            
+                            return true;  // 找到碰撞，立即返回
+                        }
+                    }
+                }
+                continue;
+            }
+            
+            // If not leaf, check if curr triangle intersects with left/right child and crawl as necessary
+            BVHNode* currLeft = curr->left;
+            BVHNode* currRight = curr->right;
+            if (currTriBox.intersectsWith(currLeft->boundingBox)) {
+                intersectQueue.push(currLeft);
+            }
+            if (currTriBox.intersectsWith(currRight->boundingBox)) {
+                intersectQueue.push(currRight);
+            }
+        }
+    }
+    
+    if(TIMING) std::cout << "No collision found in: " << (std::clock() - begin) / CLOCKS_PER_SEC << " sec" << std::endl;
+    
+    // 清理内存
+    delete allTriPoints;
+    // delete root; // 如果BVHNode有析构函数的话
+    
+    return false;  // 没有找到碰撞
+}
+
 std::vector<std::pair<int, int>> CollisionDetect::findCollisions(Eigen::MatrixXd *V, Eigen::MatrixXi *F) {
 
   double begin = 0; // for timer
